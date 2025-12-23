@@ -3,6 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 // If your Prisma file is located elsewhere, you can change the path
 import prisma from "@/lib/prisma";
 import { nextCookies } from "better-auth/next-js";
+import { sendVerificationEmail } from "@/lib/send-verification-email";
 
 
 export const auth = betterAuth({
@@ -11,6 +12,18 @@ export const auth = betterAuth({
     }),
     emailAndPassword: {
         enabled: true,
+        requireEmailVerification: true,
+    },
+    emailVerification: {
+        sendOnSignUp: true,
+        autoSignInAfterVerification: true,
+        sendVerificationEmail: async ({ user, url }) => {
+            await sendVerificationEmail({
+                to: user.email,
+                verificationURL: url,
+                userName: user.name,
+            })
+        },
     },
     socialProviders: {
         google: {
