@@ -4,7 +4,8 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import prisma from "@/lib/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { sendVerificationEmail } from "@/lib/send-verification-email";
-
+import { twoFactor } from "better-auth/plugins"
+import { sendOtpEmail } from "@/lib/send-otp-email";
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
@@ -33,7 +34,19 @@ export const auth = betterAuth({
         },
     },
     plugins: [
-        nextCookies()
+        nextCookies(),
+        twoFactor({
+            otpOptions: {
+                async sendOTP({ user, otp }) {
+                    sendOtpEmail({
+                        to: user.email,
+                        otp,
+
+                    })
+                }
+            }
+        })
+
     ]
 
 });
