@@ -1,0 +1,23 @@
+'use server'
+
+import { authSession } from "@/lib/auth-utils"
+import prisma from "@/lib/prisma"
+
+export async function updateProfile() {
+    const session = await authSession()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
+    const user = await prisma.user.findUnique({
+        where: {
+            id: session.user.id
+        },
+        select: {
+            name: true,
+            email: true,
+            image: true,
+            // twoFactorEnabled: true,
+        }
+    })
+    return user
+}

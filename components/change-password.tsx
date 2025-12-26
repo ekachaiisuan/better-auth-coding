@@ -33,75 +33,71 @@ import Link from "next/link"
 import { authClient } from "@/lib/auth-client"
 import { Spinner } from "./ui/spinner"
 import { Separator } from "@/components/ui/separator"
-import ImageUpload from "@/components/image-upload"
 
-interface ProfileFormProps {
-    name: string;
-    email: string;
-    image: string;
-    twoFactorEnabled?: boolean;
-}
 const formSchema = z.object({
-    name: z.string().min(3, "Name must be at least 3 characters."),
-    email: z.email("Invalid email"),
-    image: z.string().url("Invalid image URL"),
-
+    currentPassword: z.string().min(6, "Current password must be at least 6 characters."),
+    newPassword: z
+        .string()
+        .min(6, "New password must be at least 6 characters."),
+    confirmPassword: z.string(),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
 })
 
-export function UpdateProfileForm({ name, email, image, twoFactorEnabled }: ProfileFormProps) {
+export function ChangePasswordForm() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            name,
-            email,
-            image,
+            currentPassword: "",
+            newPassword: "",
+            confirmPassword: "",
         },
     })
 
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
         try {
-            await authClient.updateUser({
-                name: data.name,
-                image: data.image,
+            await authClient.changePassword({
+                currentPassword: data.currentPassword,
+                newPassword: data.newPassword,
             },
                 {
                     onSuccess: () => {
-                        toast.success("Updated successfully.")
+                        toast.success("Your password has been changed successfully.")
                     },
                     onError: (ctx) => {
                         toast.error(ctx.error.message)
                     }
                 })
         } catch (error) {
-            throw new Error("Failed to update profile.")
+            throw new Error("Failed to sign up.")
         }
     }
-
-
 
     return (
         <Card className="w-full max-w-md border-0 shadow-none">
             <CardHeader>
-                <CardTitle>Update your details</CardTitle>
+                <CardTitle>Change Password</CardTitle>
                 <CardDescription>
-                    Update your details.
+                    Change your password.
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <form id="update-profile" onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
+                <form id="change-password-form" onSubmit={form.handleSubmit(onSubmit)}>
                     <FieldGroup>
                         <Controller
-                            name="name"
+                            name="currentPassword"
                             control={form.control}
                             render={({ field, fieldState }) => (
                                 <Field data-invalid={fieldState.invalid}>
                                     <FieldLabel>
-                                        Name
+                                        Current Password
                                     </FieldLabel>
                                     <Input
                                         {...field}
                                         autoComplete="off"
                                         aria-invalid={fieldState.invalid}
+                                        type="password"
                                     />
                                     {fieldState.invalid && (
                                         <FieldError errors={[fieldState.error]} />
@@ -110,18 +106,18 @@ export function UpdateProfileForm({ name, email, image, twoFactorEnabled }: Prof
                             )}
                         />
                         <Controller
-                            name="email"
+                            name="newPassword"
                             control={form.control}
                             render={({ field, fieldState }) => (
                                 <Field data-invalid={fieldState.invalid}>
                                     <FieldLabel>
-                                        Email
+                                        New Password
                                     </FieldLabel>
                                     <Input
                                         {...field}
                                         autoComplete="off"
                                         aria-invalid={fieldState.invalid}
-                                        disabled
+                                        type="password"
                                     />
                                     {fieldState.invalid && (
                                         <FieldError errors={[fieldState.error]} />
@@ -130,17 +126,18 @@ export function UpdateProfileForm({ name, email, image, twoFactorEnabled }: Prof
                             )}
                         />
                         <Controller
-                            name="image"
+                            name="confirmPassword"
                             control={form.control}
                             render={({ field, fieldState }) => (
                                 <Field data-invalid={fieldState.invalid}>
                                     <FieldLabel>
-                                        Image
+                                        Confirm Password
                                     </FieldLabel>
-                                    <ImageUpload
-                                        defaultUrl={field.value}
-                                        onChange={(url) => field.onChange(url)}
-                                        endpoint="imageUploader"
+                                    <Input
+                                        {...field}
+                                        autoComplete="off"
+                                        aria-invalid={fieldState.invalid}
+                                        type="password"
                                     />
                                     {fieldState.invalid && (
                                         <FieldError errors={[fieldState.error]} />
@@ -148,16 +145,19 @@ export function UpdateProfileForm({ name, email, image, twoFactorEnabled }: Prof
                                 </Field>
                             )}
                         />
+
+                        <Button type="submit" form="change-password-form" className="max-w-40 self-end cursor-pointer">
+                            {
+                                form.formState.isSubmitting ? (
+                                    <Spinner className="size-6" />
+                                ) : (
+                                    "Change Password"
+                                )
+                            }
+                        </Button>
+
                     </FieldGroup>
-                    <Button type="submit" form="update-profile" disabled={form.formState.isSubmitting} className="max-w-40 self-end cursor-pointer">
-                        {
-                            form.formState.isSubmitting ? (
-                                <Spinner className="size-6" />
-                            ) : (
-                                "Update Profile"
-                            )
-                        }
-                    </Button>
+
                 </form>
             </CardContent>
 
