@@ -34,6 +34,11 @@ import { authClient } from "@/lib/auth-client"
 import { Spinner } from "./ui/spinner"
 import { Separator } from "@/components/ui/separator"
 import ImageUpload from "@/components/image-upload"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useRouter } from "next/navigation"
+
 
 interface ToggleOtpFormProps {
     twoFactorEnabled?: boolean;
@@ -43,6 +48,7 @@ const formSchema = z.object({
 })
 
 export function ToggleOtpForm({ twoFactorEnabled }: ToggleOtpFormProps) {
+    const router = useRouter()
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -50,22 +56,36 @@ export function ToggleOtpForm({ twoFactorEnabled }: ToggleOtpFormProps) {
         },
     })
 
-    const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    const [isOpen, setIsOpen] = React.useState(false)
+
+    const handleChange = () => {
+        setIsOpen(true)
+    }
+
+    const onSubmit = async ({ password }: z.infer<typeof formSchema>) => {
         try {
-            await authClient.updateUser({
-                name: data.name,
-                image: data.image,
-            },
-                {
-                    onSuccess: () => {
-                        toast.success("Updated successfully.")
-                    },
-                    onError: (ctx) => {
-                        toast.error(ctx.error.message)
-                    }
-                })
-        } catch (error) {
-            throw new Error("Failed to update profile.")
+            if (twoFactorEnabled) {
+                const { error } = await authClient.twoFactor.disable({ password })
+                if (error) {
+                    toast.error(error.message)
+                    return
+                }
+                router.refresh()
+                toast.success("Two factor authentication disabled.")
+
+            } else {
+                const { error } = await authClient.twoFactor.enable({ password })
+                if (error) {
+                    toast.error(error.message)
+                    return
+                }
+                router.refresh()
+                toast.success("Two factor authentication enabled.")
+            }
+        } catch {
+            throw new Error("Failed to toggle two factor authentication.")
+        } finally {
+            setIsOpen(false)
         }
     }
 
@@ -74,85 +94,66 @@ export function ToggleOtpForm({ twoFactorEnabled }: ToggleOtpFormProps) {
     return (
         <Card className="w-full max-w-md border-0 shadow-none">
             <CardHeader>
-                <CardTitle>Update your details</CardTitle>
+                <CardTitle>Enable/Disable 2FA</CardTitle>
                 <CardDescription>
-                    Update your details.
+                    Enable/Disable 2FA in your account.
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <form id="update-profile" onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
-                    <FieldGroup>
-                        <Controller
-                            name="name"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel>
-                                        Name
-                                    </FieldLabel>
-                                    <Input
-                                        {...field}
-                                        autoComplete="off"
-                                        aria-invalid={fieldState.invalid}
-                                    />
-                                    {fieldState.invalid && (
-                                        <FieldError errors={[fieldState.error]} />
+                <div className="flex justify-between items-center">
+                    <Label>{!twoFactorEnabled
+                        ? "Enable two factor authentication"
+                        : "Disable two factor authentication"}</Label>
+                    <Switch checked={twoFactorEnabled} onCheckedChange={handleChange} />
+                </div>
+                <Dialog open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>
+                                {!twoFactorEnabled ? "Enable Two Factor Authentication" : "Disable Two Factor Authentication"}
+                            </DialogTitle>
+                            <DialogDescription>
+                                Please confirm your password to {" "}
+                                {!twoFactorEnabled ? "enable" : "disable"} 2FA in your account.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <form id="toggle-otp-form" onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
+                            <FieldGroup>
+                                <Controller
+                                    name="password"
+                                    control={form.control}
+                                    render={({ field, fieldState }) => (
+                                        <Field data-invalid={fieldState.invalid}>
+                                            <FieldLabel>
+                                                Password
+                                            </FieldLabel>
+                                            <Input
+                                                {...field}
+                                                autoComplete="off"
+                                                aria-invalid={fieldState.invalid}
+                                                type="password"
+                                            />
+                                            {fieldState.invalid && (
+                                                <FieldError errors={[fieldState.error]} />
+                                            )}
+                                        </Field>
                                     )}
-                                </Field>
-                            )}
-                        />
-                        <Controller
-                            name="email"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel>
-                                        Email
-                                    </FieldLabel>
-                                    <Input
-                                        {...field}
-                                        autoComplete="off"
-                                        aria-invalid={fieldState.invalid}
-                                        disabled
-                                    />
-                                    {fieldState.invalid && (
-                                        <FieldError errors={[fieldState.error]} />
-                                    )}
-                                </Field>
-                            )}
-                        />
-                        <Controller
-                            name="image"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel>
-                                        Image
-                                    </FieldLabel>
-                                    <ImageUpload
-                                        defaultUrl={field.value}
-                                        onChange={(url) => field.onChange(url)}
-                                        endpoint="imageUploader"
-                                    />
-                                    {fieldState.invalid && (
-                                        <FieldError errors={[fieldState.error]} />
-                                    )}
-                                </Field>
-                            )}
-                        />
-                    </FieldGroup>
-                    <Button type="submit" form="update-profile" disabled={form.formState.isSubmitting} className="max-w-40 self-end cursor-pointer">
-                        {
-                            form.formState.isSubmitting ? (
-                                <Spinner className="size-6" />
-                            ) : (
-                                "Update Profile"
-                            )
-                        }
-                    </Button>
-                </form>
-            </CardContent>
+                                />
 
+                            </FieldGroup>
+                            <Button type="submit" form="toggle-otp-form" disabled={form.formState.isSubmitting} className="max-w-40 self-end cursor-pointer">
+                                {
+                                    form.formState.isSubmitting ? (
+                                        <Spinner className="size-6" />
+                                    ) : (
+                                        !twoFactorEnabled ? ("Enable 2FA") : ("Disable 2FA")
+                                    )
+                                }
+                            </Button>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+            </CardContent>
         </Card>
     )
 }

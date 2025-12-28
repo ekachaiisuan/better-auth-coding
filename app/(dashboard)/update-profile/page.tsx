@@ -1,5 +1,6 @@
 import { updateProfile } from "@/app/actions/user"
 import { ChangePasswordForm } from "@/components/change-password"
+import { ToggleOtpForm } from "@/components/toggle-otp-form"
 import { UpdateProfileForm } from "@/components/update-profile"
 import { authIsRequired } from "@/lib/auth-utils"
 import { redirect } from "next/navigation"
@@ -11,7 +12,7 @@ export default async function UpdateProfilePage() {
         redirect("/sign-in")
     }
     return (
-        <div className="w-full p-6 shadow-lg min-h-dvh rounded-2xl h-full flex gap-6">
+        <div className="w-full p-6 shadow-lg min-h-dvh rounded-2xl h-full flex gap-6 items-start">
             <UpdateProfileForm
                 email={user.email}
                 name={user.name ?? ""}
@@ -19,6 +20,7 @@ export default async function UpdateProfilePage() {
 
             />
             <ChangePasswordForm />
+            <ToggleOtpForm twoFactorEnabled={user.twoFactorEnabled} />
 
         </div>
     )

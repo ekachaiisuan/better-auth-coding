@@ -36,6 +36,7 @@ export const auth = betterAuth({
     plugins: [
         nextCookies(),
         twoFactor({
+            skipVerificationOnEnable: true,
             otpOptions: {
                 async sendOTP({ user, otp }) {
                     sendOtpEmail({

@@ -33,6 +33,7 @@ import Link from "next/link"
 import { authClient } from "@/lib/auth-client"
 import { Spinner } from "./ui/spinner"
 import { Separator } from "@/components/ui/separator"
+import { useRouter } from "next/navigation"
 
 const formSchema = z.object({
     email: z.email("Invalid email"),
@@ -42,6 +43,7 @@ const formSchema = z.object({
 })
 
 export function SignInForm() {
+    const router = useRouter()
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -51,14 +53,20 @@ export function SignInForm() {
     })
 
     async function onSubmit(data: z.infer<typeof formSchema>) {
+
         try {
             await authClient.signIn.email({
                 email: data.email,
                 password: data.password,
+                callbackURL: "/",
             },
                 {
-                    onSuccess: () => {
-                        toast.success("Signed in successfully.")
+                    onSuccess: async () => {
+                        const { error } = await authClient.twoFactor.sendOtp({})
+                        if (error) {
+                            toast.error(error.message)
+                        }
+                        router.push("/two-factor")
                     },
                     onError: (ctx) => {
                         toast.error(ctx.error.message)
