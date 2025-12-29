@@ -130,8 +130,9 @@ export function SignInForm() {
                             control={form.control}
                             render={({ field, fieldState }) => (
                                 <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel>
-                                        Password
+                                    <FieldLabel className="flex items-center justify-between">
+                                        <span>Password</span>
+                                        <span className="text-blue-600 cursor-pointer" onClick={() => router.push("/request-password")}>Forgot Password?</span>
                                     </FieldLabel>
                                     <Input
                                         {...field}

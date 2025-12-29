@@ -6,6 +6,7 @@ import { nextCookies } from "better-auth/next-js";
 import { sendVerificationEmail } from "@/lib/send-verification-email";
 import { twoFactor } from "better-auth/plugins"
 import { sendOtpEmail } from "@/lib/send-otp-email";
+import { sendResetPasswordEmail } from "@/lib/send-reset-password-email";
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
@@ -14,6 +15,20 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
         requireEmailVerification: true,
+
+        sendResetPassword: async ({ user, url }, request) => {
+            void sendResetPasswordEmail({
+                to: user.email,
+                subject: 'Reset your password',
+                url
+            })
+        }
+
+    },
+    rateLimit: {
+        enabled: true,
+        window: 10,
+        max: 2,
     },
     emailVerification: {
         sendOnSignUp: true,
