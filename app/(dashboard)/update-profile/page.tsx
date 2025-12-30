@@ -12,7 +12,7 @@ export default async function UpdateProfilePage() {
         redirect("/sign-in")
     }
     return (
-        <div className="w-full p-6 shadow-lg min-h-dvh rounded-2xl h-full flex gap-6 items-start">
+        <div className="w-full p-6 shadow-lg mx-auto max-w-7xl min-h-dvh rounded-2xl h-full flex gap-6 items-start">
             <UpdateProfileForm
                 email={user.email}
                 name={user.name ?? ""}

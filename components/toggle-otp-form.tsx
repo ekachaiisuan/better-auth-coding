@@ -70,17 +70,16 @@ export function ToggleOtpForm({ twoFactorEnabled }: ToggleOtpFormProps) {
                     toast.error(error.message)
                     return
                 }
-                router.refresh()
                 toast.success("Two factor authentication disabled.")
-
+                router.refresh()
             } else {
                 const { error } = await authClient.twoFactor.enable({ password })
                 if (error) {
                     toast.error(error.message)
                     return
                 }
-                router.refresh()
                 toast.success("Two factor authentication enabled.")
+                router.refresh()
             }
         } catch {
             throw new Error("Failed to toggle two factor authentication.")

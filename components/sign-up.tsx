@@ -97,7 +97,7 @@ export function SignUpForm() {
     }
 
     return (
-        <Card className="w-full sm:max-w-md">
+        <Card className="w-full max-w-md min-w-sm">
             <CardHeader>
                 <CardTitle>Sign Up</CardTitle>
                 <CardDescription>

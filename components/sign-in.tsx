@@ -97,7 +97,7 @@ export function SignInForm() {
     }
 
     return (
-        <Card className="w-full sm:max-w-md">
+        <Card className="w-full max-w-md min-w-sm">
             <CardHeader>
                 <CardTitle>Sign In</CardTitle>
                 <CardDescription>

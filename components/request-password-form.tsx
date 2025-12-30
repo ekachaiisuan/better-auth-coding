@@ -56,18 +56,18 @@ export function RequestPasswordForm() {
     const onSubmit = async ({ email }: z.infer<typeof formSchema>) => {
         try {
 
-            await authClient.requestPasswordReset({ email }, {
-                onSuccess: async () => {
-                    setIsEmailSent(true)
-                },
-                onError: (ctx) => {
-                    toast.error(ctx.error.message)
-                }
-            })
+            const { data, error } = await authClient.requestPasswordReset({ email, redirectTo: "/reset-password" })
+            if (data?.status) {
+                toast.success('An email has been sent to you.')
+                setIsEmailSent(true)
+                router.refresh()
+            }
+            if (error) {
+                toast.error(error.message)
+                setIsEmailSent(false)
+            }
         } catch (error) {
             toast.error("Failed to send request.")
-        } finally {
-            setIsEmailSent(false)
         }
     }
 

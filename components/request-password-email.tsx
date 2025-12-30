@@ -48,7 +48,7 @@ export const RequestPasswordEmail = ({
                     <Text className="text-[16px] leading-[26px]">
                         Best,
                         <br />
-                        The {to} team
+                        The better-auth team
                     </Text>
                     <Hr className="border-[#cccccc] my-5" />
                     <Text className="text-[#8898aa] text-[12px]">
