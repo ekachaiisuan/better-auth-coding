@@ -36,7 +36,16 @@ import {
     TableRow,
 } from "@/components/ui/table"
 
-export const columns: ColumnDef<Payment>[] = [
+export interface UserProps {
+    id: string;
+    name: string;
+    email: string;
+    emailVerified: boolean;
+    role: string;
+    hasDeletePermission: boolean;
+}
+
+export const columns: ColumnDef<UserProps>[] = [
     {
         id: "select",
         header: ({ table }) => (
@@ -82,9 +91,18 @@ export const columns: ColumnDef<Payment>[] = [
         cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
     },
     {
+        accessorKey: "role",
+        header: () => <div className="text-right">Role</div>,
+        cell: ({ row }) => {
+            return <div className="text-right capitalize">{row.getValue("role")}</div>
+        },
+    },
+    {
         accessorKey: "emailVerified",
-        header: 'Email Verified',
-        cell: ({ row }) => <div className="capitalize">{row.getValue("emailVerified")}</div>
+        header: () => <div className="text-right">Email Verified</div>,
+        cell: ({ row }) => {
+            return <div className="text-right capitalize">{row.getValue("emailVerified")}</div>
+        },
     },
     {
         id: "actions",
@@ -117,7 +135,7 @@ export const columns: ColumnDef<Payment>[] = [
     },
 ]
 
-export function DataTableDemo() {
+export function DataTable({ data }: { data: UserProps[] }) {
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
         []
