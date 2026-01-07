@@ -35,15 +35,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-
-export interface UserProps {
-    id: string;
-    name: string;
-    email: string;
-    emailVerified: boolean;
-    role: string;
-    hasDeletePermission: boolean;
-}
+import { UserProps } from "@/hooks/use-user"
 
 export const columns: ColumnDef<UserProps>[] = [
     {
@@ -88,20 +80,20 @@ export const columns: ColumnDef<UserProps>[] = [
                 </Button>
             )
         },
-        cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
-    },
-    {
-        accessorKey: "role",
-        header: () => <div className="text-right">Role</div>,
-        cell: ({ row }) => {
-            return <div className="text-right capitalize">{row.getValue("role")}</div>
-        },
+        cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>
     },
     {
         accessorKey: "emailVerified",
         header: () => <div className="text-right">Email Verified</div>,
         cell: ({ row }) => {
             return <div className="text-right capitalize">{row.getValue("emailVerified")}</div>
+        },
+    },
+    {
+        accessorKey: "role",
+        header: () => <div className="text-right">Role</div>,
+        cell: ({ row }) => {
+            return <div className="text-right capitalize">{row.getValue("role")}</div>
         },
     },
     {

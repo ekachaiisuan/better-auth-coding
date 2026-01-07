@@ -9,6 +9,7 @@ import { sendOtpEmail } from "@/lib/send-otp-email";
 import { sendResetPasswordEmail } from "@/lib/send-reset-password-email";
 import { ac, roles } from "@/lib/permissions";
 
+
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: "postgresql",
