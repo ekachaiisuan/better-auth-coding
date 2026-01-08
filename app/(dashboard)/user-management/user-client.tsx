@@ -1,5 +1,6 @@
 'use client'
 
+import { DataTable } from "@/components/data-table"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -9,13 +10,14 @@ import { Spinner } from "@/components/ui/spinner"
 import { useUsers, UserProps } from "@/hooks/use-user"
 import { authClient } from "@/lib/auth-client"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { Controller, useForm } from "react-hook-form"
+import { toast } from "sonner"
 import { z } from "zod"
+const ROLE_OPTIONS = ["user", "admin"] as const;
+export type Role = (typeof ROLE_OPTIONS)[number];
 
-const ROLE_OPTIONS = ['user', 'admin'] as const
-
-export type Role = (typeof ROLE_OPTIONS)[number]
 
 const formSchema = z.object({
     name: z.string().min(3, "Name must be at least 3 characters long"),
@@ -25,6 +27,7 @@ const formSchema = z.object({
 })
 
 export default function UserManagementClient({ users }: { users: UserProps }) {
+    const router = useRouter()
     const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -47,21 +50,60 @@ export default function UserManagementClient({ users }: { users: UserProps }) {
         }
     }, [user, form])
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
-        if (!user.id) {
-            await authClient.admin.createUser({
-                name: values.name,
-                email: values.email,
-                role: values.role as Role,
-                password: values.password as string
-            })
-        } else {
+        try {
+            if (!user.id) {
+                await authClient.admin.createUser({
+                    name: values.name,
+                    email: values.email,
+                    role: values.role as Role,
+                    password: values.password as string
+                })
+                toast.success("User created successfully")
+            } else {
+                await authClient.admin.updateUser({
+                    userId: user.id,
+                    data: {
+                        name: values.name,
+                        email: values.email,
+                        role: values.role as Role,
+                        password: values.password as string
+                    }
+                })
+                toast.success("User updated successfully")
+            }
+        } catch (error) {
+            toast.error('Something went wrong')
+        } finally {
+            setIsOpen(false)
+            form.reset()
+            setUser({
+                id: "",
+                name: "",
+                email: "",
+                role: "",
+                emailVerified: false,
+                hasDeletePermission: false,
 
+            })
+            router.refresh()
         }
-        setIsOpen(false)
     }
     return (
         <>
-            <Dialog>
+            <Dialog open={isOpen} onOpenChange={isOpen => {
+                setIsOpen(isOpen)
+                if (!isOpen) {
+                    form.reset()
+                    setUser({
+                        id: "",
+                        name: "",
+                        email: "",
+                        role: "",
+                        emailVerified: false,
+                        hasDeletePermission: false,
+                    })
+                }
+            }}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>{!!users.id ? "Edit" : "Create"} User</DialogTitle>
@@ -174,6 +216,15 @@ export default function UserManagementClient({ users }: { users: UserProps }) {
                     </form>
                 </DialogContent>
             </Dialog>
+            <div className="flex flex-col p-8">
+                <div className="flex w-full justify-between">
+                    <h1 className="text-lg">User Management</h1>
+                    <Button className="cursor-pointer" onClick={() => setIsOpen(true)}>Create new user</Button>
+                </div>
+            </div>
+            <div className="flex flex-col p-8">
+
+            </div>
         </>
     )
 

@@ -1,3 +1,12 @@
-ทำค้างอยู่ที่ update-profile.tsx
-youtube 1.27
-https://www.youtube.com/watch?v=roHoUhdiae4&t=4636s
+user-management
+--page.ts
+<UserManagementForm users={formattedUsers} /> // error code endline
+--user-client.tsx
+<DataTable data={users} /> // error code endline
+const ROLE_OPTIONS = ["user", "admin","superadmin"] as const;
+await authClient.admin.createUser({
+                    name: values.name,
+                    email: values.email,
+                    role: values.role as Role, // error code
+                    password: values.password as string
+                })
